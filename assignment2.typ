@@ -58,7 +58,48 @@ Per-core queues are also better for cache use. Long video encoding tasks often r
 
 = Question 2
 
-TODO
+== a
+
+At time 0, P1 has the highest priority, so it runs first. P3 and P4 both have priority 5, so they use round-robin with a quantum of 8 when they are the highest-priority ready processes. P5 arrives at time 20 with priority 7, so it preempts P3.
+
+#figure(
+  image("./assets/assignment2-question2-gantt.svg", width: 100%),
+  caption: [Gantt chart for Question 2],
+)
+
+== b
+
+Turnaround time is calculated as completion time minus arrival time, as this is equivalent to the interval from submission to completion @silberschatz2018osc[Section 5.2].
+
+#table(
+  columns: (25%, 25%, 25%, 25%),
+  inset: 5pt,
+  stroke: 0.5pt,
+  [*Process*], [*Arrival Time*], [*Completion Time*], [*Turnaround Time*],
+  [P1], [0], [18], [18],
+  [P2], [0], [63], [63],
+  [P3], [10], [51], [41],
+  [P4], [12], [46], [34],
+  [P5], [20], [28], [8],
+  [P6], [25], [83], [58],
+)
+
+== c
+
+Waiting time is calculated as turnaround time minus burst time, equivalent to the total time spent waiting in the ready queue @silberschatz2018osc[Section 5.2].
+
+#table(
+  columns: (25%, 25%, 25%, 25%),
+  inset: 5pt,
+  stroke: 0.5pt,
+  [*Process*], [*Burst*], [*Turnaround Time*], [*Waiting Time*],
+  [P1], [18], [18], [0],
+  [P2], [12], [63], [51],
+  [P3], [15], [41], [26],
+  [P4], [10], [34], [24],
+  [P5], [8], [8], [0],
+  [P6], [20], [58], [38],
+)
 
 = Question 3
 

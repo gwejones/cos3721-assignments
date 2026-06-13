@@ -1,0 +1,30 @@
+@startuml
+
+scale 4 as 40 pixels
+manual time-axis
+
+rectangle "CPU" as CPU
+
+@0
+CPU is P₁
+@18
+CPU is P₃ : P₅ preempts P₃
+@20
+CPU is P₅
+@28
+CPU is P₄
+@28 <-> @36 : 1 quantum
+@36
+CPU is P₃
+@36 <-> @44 : 1 quantum
+@44
+CPU is P₄
+@46
+CPU is P₃
+@51
+CPU is P₂
+@63
+CPU is P₆
+@83
+CPU is Idle
+@enduml

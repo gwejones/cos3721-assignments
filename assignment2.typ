@@ -103,7 +103,39 @@ Waiting time is calculated as turnaround time minus burst time, equivalent to th
 
 = Question 3
 
-TODO
+In CFS, a task with a lower nice value has a higher weight and gets a larger share of CPU time. The scheduler keeps a `vruntime` value for each task and normally chooses the runnable task with the smallest `vruntime`. A higher-priority task's `vruntime` grows more slowly than a lower-priority task's `vruntime` for the same amount of real CPU time @silberschatz2018osc[Section 5.7].
+
+Here *A* has nice value -5, so *A* has higher priority than *B*. *B* has nice value +5, so *B* has lower priority.
+
+== a
+
+#table(
+  columns: (25%, 75%),
+  inset: 5pt,
+  stroke: 0.5pt,
+  [*Scenario*], [*How the `vruntime` values change*],
+  [*1. A and B are both CPU-bound*],
+  [Both tasks are always ready to run. A's `vruntime` grows more slowly because A has the lower nice value and therefore the higher weight. B's `vruntime` grows faster when it runs. CFS will still run B sometimes, because it tries to keep tasks fair, but B will fall behind A in CPU share.],
+  [*2. A is I/O-bound and B is CPU-bound*],
+  [A often blocks for I/O, so while A is sleeping its `vruntime` does not increase. B keeps using the CPU and its `vruntime` keeps increasing. Since B also has the higher nice value, B's `vruntime` grows relatively quickly. When A becomes runnable again, A will often have a smaller `vruntime` than B.],
+  [*3. A is CPU-bound and B is I/O-bound*],
+  [A is always ready and keeps using the CPU, but its `vruntime` grows slowly because it has higher priority. B sleeps often, so B's `vruntime` may stay low while it is blocked. When B runs, however, its `vruntime` increases faster than A's because B has lower priority.],
+)
+
+== b
+
+#table(
+  columns: (35%, 65%),
+  inset: 5pt,
+  stroke: 0.5pt,
+  [*Scenario*], [*Likely scheduling result*],
+  [*1. A and B are both CPU-bound*],
+  [A is favoured and gets more CPU time. B still runs, but less often or for less total time than A.],
+  [*2. A is I/O-bound and B is CPU-bound*],
+  [A is likely to be scheduled quickly whenever it wakes up. B will still use the CPU while A is blocked, so B may get most of the total CPU time over a long period.],
+  [*3. A is CPU-bound and B is I/O-bound*],
+  [A will run for most of the time while B is sleeping. When B wakes up, B may be scheduled quickly if its `vruntime` is smaller, but it will usually run only briefly before blocking again.],
+)
 
 = Question 4
 

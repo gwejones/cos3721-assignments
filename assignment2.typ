@@ -185,6 +185,60 @@ Here `trywait()` must test the semaphore and decrement it as one atomic operatio
 
 = Question 5
 
+For this question I will assume that `compare_and_swap(value, expected, new_value)` returns the old value of `value`, as per the textbook example. The textbook explains that compare-and-swap checks a value and changes it as one atomic operation @silberschatz2018osc[Section 6.4.2].
+
+== a
+
+The lock should be initialized to `0` because the question defines `0` as unlocked and `1` as locked. It must be initialized before any thread can use it.
+
+```c
+void init(lock *m) {
+    m->available = 0;
+}
+```
+
+== b
+
+The `acquire()` function can keep trying until it changes `available` from `0` to `1`.
+
+```c
+void acquire(lock *m) {
+    while (compare_and_swap(&m->available, 0, 1) != 0) {
+        ; /* busy wait */
+    }
+}
+```
+
+If `available` is `0`, the thread changes it to `1` and enters the critical section. If `available` is already `1`, another thread owns the lock, so the thread keeps waiting. This is the same basic idea as the textbook's mutual-exclusion example using compare-and-swap @silberschatz2018osc[Section 6.4].
+
+== c
+
+The `release()` function unlocks the mutex by setting `available` back to `0`.
+
+```c
+void release(lock *m) {
+    m->available = 0;
+}
+```
+
+Only the thread that acquired the lock should call `release()`. After this assignment, another waiting thread can successfully acquire the lock.
+
+== d
+
+`compare_and_swap()` is important because it combines the check and the update into one indivisible operation. Without it, two threads could both see `available == 0` before either one changes it to `1`. They could then both enter the critical section, which breaks mutual exclusion.
+
+With `compare_and_swap()`, only one thread can successfully change `available` from `0` to `1`. If two threads try at the same time, the hardware runs the operations one at a time in some order, so one succeeds and the other sees that the lock is already taken. This is why atomic hardware instructions are used to build mutex locks @silberschatz2018osc[Sections 6.4 and 6.5].
+
+= Question 6
+
+TODO
+
+= Question 7
+
+TODO
+
+= Question 8
+
 TODO
 
 #bibliography("references.bib", title: "References")

@@ -139,7 +139,49 @@ Here *A* has nice value -5, so *A* has higher priority than *B*. *B* has nice va
 
 = Question 4
 
-TODO
+== a
+
+Checking the semaphore value before calling `wait()` is unsafe because the check and the `wait()` call are two separate actions. Another process can run between them and change the semaphore. This is a race condition.
+
+The important point is that the test of the semaphore value and the decrement of the value must happen atomically. The textbook says that the semaphore value must be modified atomically, and that `wait(S)` must test and possibly decrement `S` without interruption @silberschatz2018osc[Section 6.6].
+
+So this code:
+
+```c
+if (getValue(&sem) > 0)
+    wait(&sem);
+```
+
+does not really make `wait()` safe or non-blocking. The value returned by `getValue()` may already be old by the time `wait()` is called.
+
+== b
+
+One possible sequence is:
+
+#enum(
+  [The semaphore starts at `1`.],
+  [`P1` calls `getValue(&sem)` and sees `1`. It is about to call `wait(&sem)`, but it is preempted.],
+  [`P2` now runs. It also calls `getValue(&sem)` and sees `1`.],
+  [`P2` calls `wait(&sem)`. Since the semaphore is still available, `wait()` decrements it to `0`, and `P2` enters the critical section.],
+  [`P1` runs again and calls `wait(&sem)`. But the semaphore is now `0`, so `P1` blocks.],
+)
+
+This is not what the developer intended. `P1` checked the value first because it wanted to avoid blocking, but it still blocked because the value changed after the check. If the program used the result of `getValue()` as permission to enter the critical section, the situation would be worse, because both processes could think the semaphore was available.
+
+== c
+
+A safer approach is not to check the value separately. Since the alternative should prevent blocking, the process should use one atomic non-blocking acquire operation, such as `trywait()`:
+
+```c
+if (trywait(&sem)) {
+    /* critical section */
+    signal(&sem);
+} else {
+    /* dont enter the critical section; try again later */
+}
+```
+
+Here `trywait()` must test the semaphore and decrement it as one atomic operation. If the semaphore is available, the process acquires it and enters the critical section. If it is not available, the process immediately returns failure instead of blocking. This gives mutual exclusion because no process enters the critical section unless it has actually acquired the semaphore. This kind of atomic test-and-update can be built using hardware support such as compare-and-swap @silberschatz2018osc[Sections 6.4 and 6.6].
 
 = Question 5
 

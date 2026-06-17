@@ -10,6 +10,8 @@
   )
 )
 
+#show heading.where(level: 3): set heading(numbering: none)
+
 = Question 1
 
 == a

@@ -231,7 +231,39 @@ With `compare_and_swap()`, only one thread can successfully change `available` f
 
 = Question 6
 
-TODO
+== a
+
+Operating systems provide different locks because the synchronization problems that an operating system has to solve are not all the same. A single universal lock would either be too slow or too restrictive to apply to all situations.
+
+Some critical sections are extremely short, so it can be cheaper for a thread to spin briefly than to be put to sleep and later woken up. Other critical sections may take longer, especially if a thread may wait for I/O, so blocking is better than wasting CPU time. Some problems are not just about one thread entering a critical section; they involve counting a limited number of resources, or making a thread wait until some condition becomes true.
+
+So the OS uses different mechanisms for different needs. Spinlocks for very short waits, mutex locks for ordinary mutual exclusion, semaphores for counting and resource limits, and condition variables for waiting on a state change @silberschatz2018osc[Sections 6.5, 6.6.1, and 6.7.1].
+
+== b
+
+=== Spinlock
+
+A spinlock would be used when a server thread needs to update a very small shared value, like perhaps a counter or a pointer, and the lock will be held for only a few cycles.
+
+It is needed because it avoids the overhead of putting the thread to sleep and waking it again. This only makes sense for very short waits, otherwise the thread wastes CPU time while spinning @silberschatz2018osc[Section 6.5].
+
+=== Mutex lock
+
+A mutex lock would be used when threads access a shared structure such as a buffer. Only one thread should modify that structure at a time.
+
+It is needed because it gives mutual exclusion. A thread must acquire the lock before entering the critical section and release it afterwards, preventing two threads from corrupting the shared data @silberschatz2018osc[Section 6.5].
+
+=== Semaphore
+
+A semaphore would be used when the server has a limited pool of resources, such as some database connections. Many threads may request a resource, but only up to the available limit may use it.
+
+It is needed because a counting semaphore can be initialized to the number of available resources. Each thread performs `wait()` before using one resource and `signal()` when it releases it. This prevents too many threads from using the limited resource at once @silberschatz2018osc[Section 6.6.1].
+
+=== Condition variable
+
+A condition variable could be used when threads wait for new client requests to be placed into a shared work queue. When the queue is empty, workers should not keep checking it in a loop.
+
+It is needed because it lets a worker sleep until another thread signals that the queue is no longer empty. It is useful for waiting for a condition to become true, not just for locking a data structure @silberschatz2018osc[Section 6.7.1].
 
 = Question 7
 

@@ -235,11 +235,11 @@ With `compare_and_swap()`, only one thread can successfully change `available` f
 
 == a
 
-Operating systems provide different locks because the synchronization problems that an operating system has to solve are not all the same. A single universal lock would either be too slow or too restrictive to apply to all situations.
+Operating systems use more than one kind of lock because not every synchronization problem has the same shape. One general-purpose lock could work in a basic sense, but it would not be the best fit for every case.
 
-Some critical sections are extremely short, so it can be cheaper for a thread to spin briefly than to be put to sleep and later woken up. Other critical sections may take longer, especially if a thread may wait for I/O, so blocking is better than wasting CPU time. Some problems are not just about one thread entering a critical section; they involve counting a limited number of resources, or making a thread wait until some condition becomes true.
+If the protected code runs very quickly, it may be faster for a thread to wait in a short spin instead of being put to sleep and woken up again. If the wait may be longer, especially when I/O is involved, then blocking the thread is usually better because it avoids wasting CPU time. Other cases need more than simple mutual exclusion, such as limiting access to a fixed number of resources or waiting until a condition changes.
 
-So the OS uses different mechanisms for different needs. Spinlocks for very short waits, mutex locks for ordinary mutual exclusion, semaphores for counting and resource limits, and condition variables for waiting on a state change @silberschatz2018osc[Sections 6.5, 6.6.1, and 6.7.1].
+For that reason, the OS provides separate tools for separate needs. Spinlocks can be used for short waits. Mutex locks can be used for protecting normal critical sections. Semaphores for resource counting, and condition variables for waiting on a particular state change @silberschatz2018osc[Sections 6.5, 6.6.1, and 6.7.1].
 
 == b
 

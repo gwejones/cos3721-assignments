@@ -310,6 +310,24 @@ Im assuming that `R3` enters at `t3`, after `W1` is already waiting.
 
 = Question 8
 
-TODO
+== a
+
+Two kernel data structures that can suffer from race conditions are:
+
+- *The process control block list* @silberschatz2018osc[Section 3.1.3]. The kernel keeps information about processes in process control blocks. According to the textbook Linux represents active processes using a doubly linked list of `task_struct` structures.
+
+- *Open-file table* @silberschatz2018osc[Section 12.4.7]. The textbook lists the open-file table as one of the in-kernel data structures used to track I/O state. This table includes information such as file position, file size, and an open count @silberschatz2018osc[Section 13.1.2].
+
+== b
+
+=== Process control block list
+
+A race condition can happen when two CPUs change the process list at the same time. One CPU may be creating a new process and inserting its `task_struct` entry into the list, while another CPU is removing a process that has just exited.
+
+If these list updates are not protected by proper synchronization, one CPU may update a pointer while the other CPU is still using the old pointer. The result could be a process entry being lost. The insert and remove operations should therefore be synchronized so only one thread of kernel code changes the list at a time.
+
+=== Open-file table
+
+A race condition can also happen in the open-file table. For example, if two processes have the same file open and the system-wide open count is `2`, both processes may call `close()` at nearly the same time. Both kernel paths may read the open count as `2`, subtract `1`, and write back `1`, even though both processes are closing the file. The final open count should be `0`. If the open count is wrong, the kernel may keep the open-file table entry even though nobody is using the file anymore. This could also delay releasing file locks or other file-related resources. The open count update and possible removal of the table entry must therefore be protected by proper use of synchronization.
 
 #bibliography("references.bib", title: "References")

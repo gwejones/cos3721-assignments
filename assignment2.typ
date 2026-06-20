@@ -269,7 +269,44 @@ It is needed because it lets a worker sleep until another thread signals that th
 
 = Question 7
 
-TODO
+This is basically the readers-writers problem described in the textbook. Multiple readers may access the shared data at the same time, but a writer needs exclusive access. This writer-priority version is close to the _second_ readers-writers problem described in the textbook, where once a writer is waiting, no new readers should start reading until the writer has had a chance to write @silberschatz2018osc[Section 7.1.2].
+
+== a
+
+If reader threads are always given priority, writers may starve. This means a writer could wait for a very long time because new readers keep arriving and are allowed to start reading before the writer.
+
+In a database server this is a serious problem. The write operation may be an update to an account balance or other shared data. If writers are delayed indefinitely the database may keep serving old data to readers and important updates may never be applied. Also, the queue of write operations may become backed up and eventually be filled. The textbook also notes that readers-writers solutions can suffer from starvation, with writers possibly starving when readers are favoured @silberschatz2018osc[Section 7.1.2].
+
+== b
+
+My proposed synchronization strategy is based on the writers-preference solution described by GeeksforGeeks @geeksforgeeks2025writersPreference.
+
+
+- *Required synchronization variables:* Use `read_count` to count active readers and `write_count` to count waiting or active writers. Use a `resource` semaphore or lock for the actual shared database record. Use `read_mutex` to protect `read_count`, `write_mutex` to protect `write_count`, and a `read_try` semaphore as a gate that writers can close to stop new readers.
+
+- *How multiple readers can read concurrently:* A reader first passes through `read_try`, then safely increments `read_count`. The first reader locks `resource`, which blocks writers. Later readers only increment `read_count` and can read together. When a reader exits it decrements `read_count`, and the last reader releases `resource`.
+
+- *How writers obtain exclusive access:* A writer increments `write_count`. If it is the first waiting writer, it locks `read_try`, so new readers cannot enter. The writer then waits for `resource`. Once existing readers finish and release `resource`, the writer locks it and writes alone. While a writer holds `resource`, no reader or other writer may access the database.
+
+- *How writer starvation is prevented:* As soon as a writer is waiting, `read_try` blocks new readers. Existing readers are allowed to finish but new readers cannot keep jumping ahead of the writer. After the waiting writers finish the last writer opens `read_try` again, so readers are not blocked unnecessarily when no writer is waiting.
+
+== c
+
+Im assuming that `R3` enters at `t3`, after `W1` is already waiting.
+
+#table(
+  columns: (12%, 22%, 22%, 22%, 22%),
+  inset: 5pt,
+  stroke: 0.5pt,
+  [*Time*], [*Reader R1*], [*Reader R2*], [*Writer W1*], [*Reader R3*],
+  [`t0`], [enters], [], [], [],
+  [`t1`], [reading], [enters], [], [],
+  [`t2`], [reading], [reading], [arrives, waiting], [],
+  [`t3`], [exits], [reading], [waiting], [enters, blocked],
+  [`t4`], [], [exits], [writing], [blocked],
+  [`t5`], [], [], [exits], [reading],
+  [`t6`], [], [], [], [exits],
+)
 
 = Question 8
 
